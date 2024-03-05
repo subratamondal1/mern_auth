@@ -190,3 +190,45 @@ const authUser = asyncHandler(async (req, res) => {
 
 export default authUser;
 ```
+
+This will allow us to use `async/await` in the function and if there is an error, it will be passed to our custom error handler, which we'll create now.
+
+<h2 align="left">Custom Error Handler</h2>
+
+Create a folder called `middleware` in backend and then create a file called `errorMiddleware.js` in there. This will contain our custom error handler.
+
+```javascript
+const notFound = (req, res, next) => {
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  res.status(404);
+  next(error);
+};
+
+const errorHandler = (err, req, res, next) => {
+  let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  let message = err.message;
+
+  // If Mongoose not found error, set to 404 and change message
+  if (err.name === "CastError" && err.kind === "ObjectId") {
+    statusCode = 404;
+    message = "Resource not found";
+  }
+
+  res.status(statusCode).json({
+    message: message,
+    stack: process.env.NODE_ENV === "production" ? null : err.stack,
+  });
+};
+
+export { notFound, errorHandler };
+```
+
+We are creating two middleware functions. The first one will be used as a catch-all for any routes that don't exist. The second one will be used as a catch-all for any errors that occur in our routes.
+
+So this will allow us to throw an error from any controller function and have it passed to our custom error handler middleware, which will then respond with the appropriate status code and message.
+
+We are also checking for a specific type of error, which is the Mongoose CastError. This is the error that is thrown when an invalid ID is passed to a Mongoose query. We are checking for this and if it occurs, we are setting the status code to 404 and the message to "Resource not found".
+
+This snippet of code is very useful and I use it in most of my Node projects.
+
+Now we have to bring the functions into server.js and use them. Add the following to the top of the file.
