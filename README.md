@@ -231,4 +231,101 @@ We are also checking for a specific type of error, which is the Mongoose CastErr
 
 This snippet of code is very useful and I use it in most of my Node projects.
 
-Now we have to bring the functions into server.js and use them. Add the following to the top of the file.
+Now we have to bring the functions into `server.js` and use them. Add the following to the top of the file.
+
+```javascript
+import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+```
+
+Now, add the following to the bottom of the file, after the routes.
+
+```javascript
+app.use(notFound);
+app.use(errorHandler);
+```
+
+<h2 align="left">Add The Rest Of The Routes</h2>
+
+Now that we have our error handler setup, we can add the rest of the controller functions and routes. In `userController.js` add the following code.
+
+```javascript
+import asyncHandler from "express-async-handler";
+
+// @desc    Authenticate user & get token
+// @route   POST /api/users/auth
+// @access  Public
+const authUser = asyncHandler(async (req, res) => {
+  // res.status(401);
+  // throw new Error("Something went wrong.");
+  res.status(200).json({ message: "Authenticate User" });
+});
+
+// @desc    Register a new user
+// @route   POST /api/users/
+// @access  Public
+const registerUser = asyncHandler(async (req, res) => {
+  // res.status(401);
+  // throw new Error("Something went wrong.");
+  res.status(200).json({ message: "Register User" });
+});
+
+// @desc    Logout user
+// @route   POST /api/users/logout
+// @access  Public
+const logoutUser = asyncHandler(async (req, res) => {
+  // res.status(401);
+  // throw new Error("Something went wrong.");
+  res.status(200).json({ message: "Logout User" });
+});
+
+// @desc    Get user profile
+// @route   GET /api/users/profile
+// @access  Private
+const getUserProfile = asyncHandler(async (req, res) => {
+  // res.status(401);
+  // throw new Error("Something went wrong.");
+  res.status(200).json({ message: "Get User Profile" });
+});
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateUserProfile = asyncHandler(async (req, res) => {
+  res.status(200).json({ message: "Update User Profile" });
+});
+
+export default {
+  authUser,
+  registerUser,
+  logoutUser,
+  getUserProfile,
+  updateUserProfile,
+};
+```
+
+All we are doing here is sending back a string for now. We will add the actual functionality later.
+
+<h2 align="left">Add The Routes</h2>
+
+Now open the `userRoutes.js` file and add the following code.
+
+```javascript
+import express from "express";
+import {
+  authUser,
+  registerUser,
+  logoutUser,
+  getUserProfile,
+  updateUserProfile,
+} from "../controllers/userController.js";
+
+const router = express.Router();
+router.post("/", registerUser);
+router.post("/auth", authUser);
+router.post("/logout", logoutUser);
+router.route("/profile").get(getUserProfile).put(updateUserProfile);
+
+export default router;
+```
+
+Now all of the routes should work and just respond with the string that we added to the controller functions. Go ahead and test them out in Postman, Curl, Httpie or others. Make sure that you have the correct HTTP method selected for each route.
