@@ -93,4 +93,100 @@ const port = process.env.PORT || 5000;
 
 Restart the server and now, it should be using the port from the `.env` file. You can change the number to something else to test it.
 
+<h2 align="left">User Routes and Controller</h2>
 
+Let's get our routes setup. We will have the following routes:
+
+* **`POST /api/users`** - Register a user
+* **`POST /api/users/auth`** - Authenticate a user and get token
+* **`POST /api/users/logout`** - Logout user and clear cookie
+* **`GET /api/users/profile`** - Get user profile
+* **`PUT /api/users/profile`** - Update profile
+
+Let's start by creating a `routes directory` in backend and then create a file called `userRoutes.js` in there. This will contain all of our user routes.
+
+We could have all of the route logic in this file, but it's better to separate it out into a controller. Let's create a `controllers directory` in backend and then create a file called `userController.js` in there.
+
+Let's start by creating a single controller function and connect it to a route, just to get things going. In `userController.js` add the following code.
+
+We are just sending back a JSON response with a message of `"Success"`. Now, let's connect this to a route. In `userRoutes.js` add the following code.
+
+```javascript
+import express from "express";
+import authUser from "../controllers/userController.js";
+
+const router = express.Router();
+router.post("/auth", authUser);
+
+export default router;
+```
+
+We are importing the `authUser` function from `userController.js` and connecting it to the route `POST /api/users/auth`. Now, let's bring this into `server.js` and connect it to the `/api/users` route.
+
+```javascript
+import userRoutes from './routes/userRoutes.js';
+app.use('/api/users', userRoutes);
+```
+
+<h2 align="left">Test the Route</h2>
+
+Make sure to send a `POST` request and not `GET` request, as we have used `router.post("/auth", authUser);`
+
+```bash
+// using 'curl'
+curl -X POST http://127.0.0.1:5000/api/users/auth
+
+// output
+{"message":"Success"}
+
+// using httpie
+http post http://localhost:5000/api/users/auth
+
+// output
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Length: 21
+Content-Type: application/json; charset=utf-8
+Date: Tue, 05 Mar 2024 04:03:18 GMT
+ETag: W/"15-uFFjCr0SbbbFb/CsC0M2sF++swo"
+Keep-Alive: timeout=5
+X-Powered-By: Express
+
+{
+    "message": "Success"
+}
+```
+
+<h2 align="left">Using an Async Handler</h2>
+
+We will be using `async/await` for our controller functions. We could use `try/catch` blocks in each function, but that would be repetitive. Instead, we will create a function that will wrap around each controller function and handle any errors. We're going to keep it simple and install a package called `express-async-handler` that will do this for us.
+
+```bash
+npm i express-async-handler
+```
+
+Now, bring that into `userController.js` so that we can use it with our functions.
+
+```bash
+import asyncHandler from 'express-async-handler';
+```
+
+Now, wrap the `asyncHandler` to the `authUser` function.
+
+```javascript
+// before
+const authUser = async (req, res) => {
+  res.json({ message: "Success" });
+};
+
+export default authUser;
+
+// after
+import asyncHandler from "express-async-handler";
+
+const authUser = asyncHandler(async (req, res) => {
+  res.json({ message: "Success" });
+});
+
+export default authUser;
+```
